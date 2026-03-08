@@ -4,7 +4,7 @@ import { serve } from "@hono/node-server";
 const app = new Hono();
 
 app.get("/", (c) => {
-  return c.text("Hello Fahim 3.2.0 👋");
+  return c.text("Hello Fahim 4.2.0 👋");
 });
 
 app.get("/user", (c) => {
@@ -14,9 +14,11 @@ app.get("/user", (c) => {
   });
 });
 
-app.get("/about:id", (c) => {
-  const id = c.req.param("id");
-  return c.text(`This is about page and id is :${id})`);
+app.get("/about/:name", (c) => {
+  const name = c.req.param("name");
+  return c.json({
+      name: name.toUpperCase()
+  });
 });
 
 serve({
