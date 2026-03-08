@@ -6,25 +6,38 @@ import { basicAuth } from "hono/basic-auth";
 const app = new Hono();
 app.use("*", cors());
 
-
-
+const usersDb = {
+  fahim: { password: "123", name: "Fahim Ahmed" },
+  karim: { password: "456", name: "Karim Ullah" },
+};
 
 // Protect only the /admin route
 app.use(
   "/admin/*",
   basicAuth({
-    username: "fahim6855",
-    password: "123",
-  })
+    // <--- You were missing this part!
+    verifyUser: (username, password, c) => {
+      const user = usersDb[username];
+
+      if (user && user.password === password) {
+        c.set("authUser", user.name);
+        return true;
+      }
+
+      return false;
+    },
+  }) // <--- And this closing bracket/parenthesis
 );
 
 app.get("/admin/data", (c) => {
-  const user = c.get('authUser');
-  return c.json({ message: `Welcome, ${user || "Guest"}! This is your profile.` });
+  const user = c.get("authUser");
+  return c.json({
+    message: `Welcome, ${user || "Guest"}! This is your profile.`,
+  });
 });
 // 2. Routes
 app.get("/", (c) => {
-  return c.text("Hello Fahim 4.2.0 👋");
+  return c.text("Hello Fahim 5.2.0 👋");
 });
 
 app.get("/user", (c) => {
