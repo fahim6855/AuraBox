@@ -1,14 +1,13 @@
 {
-  "name": "nodejs-sandbox",
+  "name": "hono-playground",
   "version": "1.0.0",
-  "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "dev": "nodemon index.js"
   },
-  "keywords": [],
-  "author": "Ives van Hoorne",
-  "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {
+    "hono": "^4.4.0",
+    "@hono/node-server": "^1.8.0"
+  }
 }
