@@ -1,8 +1,28 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
+import { basicAuth } from "hono/basic-auth";
 
 const app = new Hono();
+app.use("*", cors());
 
+
+
+
+// Protect only the /admin route
+app.use(
+  "/admin/*",
+  basicAuth({
+    username: "fahim6855",
+    password: "123",
+  })
+);
+
+app.get("/admin/data", (c) => {
+  const user = c.get('authUser');
+  return c.json({ message: `Welcome, ${user || "Guest"}! This is your profile.` });
+});
+// 2. Routes
 app.get("/", (c) => {
   return c.text("Hello Fahim 4.2.0 👋");
 });
@@ -17,11 +37,17 @@ app.get("/user", (c) => {
 app.get("/about/:name", (c) => {
   const name = c.req.param("name");
   return c.json({
-      name: name.toUpperCase()
+    name: name.toUpperCase(),
   });
 });
 
+// 3. Start Server
+const port = 3000;
+console.log(`Server is running on http://localhost:${port}`);
+
 serve({
   fetch: app.fetch,
-  port: 3000,
+  port,
 });
+
+export default app;
