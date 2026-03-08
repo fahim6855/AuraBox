@@ -2,9 +2,27 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
+import Database from "better-sqlite3";
 
 const app = new Hono();
 app.use("*", cors());
+
+const db = new Database("data.db");
+
+// Create the table with a proper 'content' column
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT
+  )
+`);
+
+// Seed data: Add a row ONLY if the table is empty
+const rowCount = db.prepare("SELECT count(*) as count FROM notes").get();
+if (rowCount.count === 0) {
+  db.prepare("INSERT INTO notes (content) VALUES (?)").run("First Seeded Item");
+  console.log("✅ Seeded initial data into 'notes' table");
+}
 
 const usersDb = {
   fahim: { password: "123", name: "Fahim Ahmed" },
