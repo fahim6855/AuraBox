@@ -3,26 +3,30 @@ import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
 import Database from "better-sqlite3";
+import { prettyJSON } from "hono/pretty-json";
 
+//Middlewares
 const app = new Hono();
 app.use("*", cors());
-
+app.use("*", prettyJSON());
 const db = new Database("data.db");
 
-// Create the table with a proper 'content' column
-db.exec(`
-  CREATE TABLE IF NOT EXISTS notes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT
-  )
-`);
+//insert Note
+//db.prepare("Insert into notes (content) VALUES ('6th seeds inserted')").run();
+//Update Note
+//db.prepare("UPDATE Notes SET content = '7th Seeds Updated' WHERE id = ?").run(7);
+//delete Note
+//db.prepare("DELETE from notes WHERE id = ?").run(6);
 
-// Seed data: Add a row ONLY if the table is empty
-const rowCount = db.prepare("SELECT count(*) as count FROM notes").get();
-if (rowCount.count === 0) {
-  db.prepare("INSERT INTO notes (content) VALUES (?)").run("First Seeded Item");
-  console.log("✅ Seeded initial data into 'notes' table");
-}
+// Select Note with Id
+const note = db.prepare("Select * from notes").all();
+
+app.get("/", (c) => {
+  if (!note) {
+    return c.text("Note not found.Please Enter correct id number");
+  }
+  return c.json(note);
+});
 
 const usersDb = {
   fahim: { password: "123", name: "Fahim Ahmed" },
@@ -54,9 +58,6 @@ app.get("/admin/data", (c) => {
   });
 });
 // 2. Routes
-app.get("/", (c) => {
-  return c.text("Hello Fahim 5.2.0 👋");
-});
 
 app.get("/user", (c) => {
   return c.json({
@@ -74,7 +75,7 @@ app.get("/about/:name", (c) => {
 
 // 3. Start Server
 const port = 3000;
-console.log(`Server is running on http://localhost:${port}`);
+console.log(` 🔥 Server is running on http://localhost:${port}`);
 
 serve({
   fetch: app.fetch,
