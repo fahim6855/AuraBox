@@ -14,11 +14,11 @@ const db = new Database("data.db");
 //insert Note
 //db.prepare("Insert into notes (content) VALUES ('6th seeds inserted')").run();
 //Update Note
-//db.prepare("UPDATE Notes SET content = '7th Seeds Updated' WHERE id = ?").run(7);
+//db.prepare("UPDATE Notes SET title = 'title 1' WHERE id = ?").run(1);
 //delete Note
 //db.prepare("DELETE from notes WHERE id = ?").run(6);
 
-// Select Note with Id
+// Select Note by Id
 const note = db.prepare("Select * from notes").all();
 
 app.get("/", (c) => {
