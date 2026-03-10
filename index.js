@@ -5,24 +5,25 @@ import { basicAuth } from "hono/basic-auth";
 import Database from "better-sqlite3";
 import { prettyJSON } from "hono/pretty-json";
 import { createClient } from "@libsql/client";
+let dbToken =
+  "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzMxMTE1MDQsImlkIjoiMDE5Y2Q1YWUtMTIwMS03MTQ1LWE1MGEtOWRlNmQ0NTA4MjI4IiwicmlkIjoiMzE0YzNhNWYtMTRjNy00MGRhLWI0MzYtMWNjYzZjMmU3YmVmIn0.IhOQwb932E56GSFb3njizQDRebbbJamJyS-i1_axsVp5tlTIdv-4rgU5w0Jh_2HiXyrgbnGR-gG_jv9kzaV1CQ";
 
 //Middlewares
 const app = new Hono();
 app.use("*", cors());
 app.use("*", prettyJSON());
-const db = new Database("data.db");
+const db = createClient({
+  url: "libsql://auraboxdb-fahim6855.aws-ap-south-1.turso.io",
+  authToken: dbToken,
+});
 
-//insert Note
-//db.prepare("Insert into notes (content) VALUES ('6th seeds inserted')").run();
+//insert Note to turso
 //Update Note
-//db.prepare("UPDATE Notes SET title = 'title 1' WHERE id = ?").run(1);
 //delete Note
-//db.prepare("DELETE from notes WHERE id = ?").run(6);
-
+//delete Note
 // Select Note by Id
-const note = db.prepare("Select * from notes").all();
-
-app.get("/", (c) => {
+app.get("/", async (c) => {
+  const note = (await db.execute("Select * from notes")).rows;
   if (!note) {
     return c.text("Note not found.Please Enter correct id number");
   }
