@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono } from "hono"; // read this
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
