@@ -42,8 +42,27 @@ app.post("/add", async (c) => {
   }
 });
 //Update Note
-//delete Note
-//delete Note
+//delete Note by id
+app.get("/delete/:id", async (c) => {
+  const id = c.req.param("id");
+
+  try {
+    const result = await db.execute({
+      sql: "DELETE FROM notes WHERE id = ?",
+      args: [id],
+    });
+
+    // result.rowsAffected tells us if something was actually deleted
+    if (result.rowsAffected === 0) {
+      return c.json({ error: "Note not found" }, 404);
+    }
+
+    return c.json({ success: true, message: `Note ${id} deleted` });
+  } catch (e) {
+    console.error("Delete Error:", e.message);
+    return c.json({ error: "Failed to delete note: " + e.message }, 500);
+  }
+});
 // Select Note by Id
 app.get("/", async (c) => {
   const note = (await db.execute("Select * from notes")).rows;
