@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
 import Database from "better-sqlite3";
 import { prettyJSON } from "hono/pretty-json";
+import { createClient } from "@libsql/client";
 
 //Middlewares
 const app = new Hono();
