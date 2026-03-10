@@ -18,6 +18,29 @@ const db = createClient({
 });
 
 //insert Note to turso
+app.post("/add", async (c) => {
+  try {
+    // 1. Get the JSON body
+    const body = await c.req.json();
+
+    // 2. Extract with defaults to avoid "null" constraint errors
+    const title = body.title || "Untitled";
+    const content = body.content || "dummy content";
+    const user_id = Number(body.user_id) || 1;
+
+    // 3. Execute with explicit arguments array
+    await db.execute({
+      sql: "INSERT INTO notes (title, content, user_id) VALUES (?, ?, ?)",
+      args: [title, content, user_id],
+    });
+
+    return c.json({ success: true }, 201);
+  } catch (err) {
+    // This will print the EXACT error to your terminal
+    console.error("Insert failed:", err.message);
+    return c.json({ error: err.message }, 500);
+  }
+});
 //Update Note
 //delete Note
 //delete Note
