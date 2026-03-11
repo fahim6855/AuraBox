@@ -5,6 +5,9 @@ import { basicAuth } from "hono/basic-auth";
 import Database from "better-sqlite3";
 import { prettyJSON } from "hono/pretty-json";
 import { createClient } from "@libsql/client";
+import bcrypt from "bcrypt";
+import { sign } from "hono/jwt";
+
 let dbToken =
   "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzMxMTE1MDQsImlkIjoiMDE5Y2Q1YWUtMTIwMS03MTQ1LWE1MGEtOWRlNmQ0NTA4MjI4IiwicmlkIjoiMzE0YzNhNWYtMTRjNy00MGRhLWI0MzYtMWNjYzZjMmU3YmVmIn0.IhOQwb932E56GSFb3njizQDRebbbJamJyS-i1_axsVp5tlTIdv-4rgU5w0Jh_2HiXyrgbnGR-gG_jv9kzaV1CQ";
 
@@ -15,6 +18,68 @@ app.use("*", prettyJSON());
 const db = createClient({
   url: "libsql://auraboxdb-fahim6855.aws-ap-south-1.turso.io",
   authToken: dbToken,
+});
+//loginUser
+
+app.post("/login", async (c) => {
+  const { email, password } = await c.req.json();
+
+  // Find user in database
+  const result = await db.execute({
+    sql: "SELECT * FROM users WHERE email = ?",
+    args: [email],
+  });
+
+  const user = result.rows[0];
+  if (!user) return c.json({ error: "Invalid credentials" }, 401);
+
+  // Check password
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return c.json({ error: "Invalid credentials" }, 401);
+
+  // Generate token
+  const token = await sign(
+    {
+      sub: user.id,
+      email: user.email,
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    },
+    process.env.JWT_SECRET || "your-secret"
+  );
+
+  return c.json({ token });
+});
+// get info with token
+app.get(
+  "/me",
+  jwt({ secret: process.env.JWT_SECRET || "your-secret" }),
+  async (c) => {
+    const payload = c.get("jwtPayload"); // decoded token data
+
+    const result = await db.execute({
+      sql: "SELECT id, name, email FROM users WHERE id = ?",
+      args: [payload.sub], // sub is the user id we stored during login
+    });
+
+    return c.json(result.rows[0]);
+  }
+);
+
+//sign up
+app.post("/signup", async (c) => {
+  const { name, email, password } = await c.req.json();
+
+  const hashedPassword = await bcrypt.hash(password, 10); //encey
+
+  const result = await db.execute({
+    sql: "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+    args: [name, email, hashedPassword],
+  });
+
+  return c.json(
+    { message: "User created", userId: result.lastInsertRowid },
+    201
+  );
 });
 
 //insert Note to turso
