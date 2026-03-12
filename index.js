@@ -56,7 +56,7 @@ app.get(
   "/me",
   jwt({ secret: process.env.JWT_SECRET || "your-secret", alg: "HS256" }),
   async (c) => {
-    const payload = c.get("jwtPayload"); // decoded token data
+    const payload = c.get("jwtPayload"); // decoded token data to save
 
     const result = await db.execute({
       sql: "SELECT id, name, email FROM users WHERE id = ?",
