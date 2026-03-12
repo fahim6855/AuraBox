@@ -6,7 +6,7 @@ import Database from "better-sqlite3";
 import { prettyJSON } from "hono/pretty-json";
 import { createClient } from "@libsql/client";
 import bcrypt from "bcrypt";
-import { sign } from "hono/jwt";
+import { jwt, sign } from "hono/jwt";
 
 let dbToken =
   "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzMxMTE1MDQsImlkIjoiMDE5Y2Q1YWUtMTIwMS03MTQ1LWE1MGEtOWRlNmQ0NTA4MjI4IiwicmlkIjoiMzE0YzNhNWYtMTRjNy00MGRhLWI0MzYtMWNjYzZjMmU3YmVmIn0.IhOQwb932E56GSFb3njizQDRebbbJamJyS-i1_axsVp5tlTIdv-4rgU5w0Jh_2HiXyrgbnGR-gG_jv9kzaV1CQ";
@@ -19,6 +19,7 @@ const db = createClient({
   url: "libsql://auraboxdb-fahim6855.aws-ap-south-1.turso.io",
   authToken: dbToken,
 });
+
 //loginUser
 
 app.post("/login", async (c) => {
@@ -33,7 +34,7 @@ app.post("/login", async (c) => {
   const user = result.rows[0];
   if (!user) return c.json({ error: "Invalid credentials" }, 401);
 
-  // Check password
+  // Check password with
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return c.json({ error: "Invalid credentials" }, 401);
 
@@ -44,7 +45,8 @@ app.post("/login", async (c) => {
       email: user.email,
       exp: Math.floor(Date.now() / 1000) + 86400,
     },
-    process.env.JWT_SECRET || "your-secret"
+    process.env.JWT_SECRET || "your-secret",
+    "HS256"
   );
 
   return c.json({ token });
@@ -52,7 +54,7 @@ app.post("/login", async (c) => {
 // get info with token
 app.get(
   "/me",
-  jwt({ secret: process.env.JWT_SECRET || "your-secret" }),
+  jwt({ secret: process.env.JWT_SECRET || "your-secret", alg: "HS256" }),
   async (c) => {
     const payload = c.get("jwtPayload"); // decoded token data
 
