@@ -8,7 +8,9 @@ import { createClient } from "@libsql/client";
 import bcrypt from "bcrypt";
 import { jwt, sign } from "hono/jwt";
 
-let dbToken = process.env.TURSO_DB_TOKEN;
+let dbToken =
+  process.env.TURSO_DB_TOKEN ||
+  "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzMxMTE1MDQsImlkIjoiMDE5Y2Q1YWUtMTIwMS03MTQ1LWE1MGEtOWRlNmQ0NTA4MjI4IiwicmlkIjoiMzE0YzNhNWYtMTRjNy00MGRhLWI0MzYtMWNjYzZjMmU3YmVmIn0.IhOQwb932E56GSFb3njizQDRebbbJamJyS-i1_axsVp5tlTIdv-4rgU5w0Jh_2HiXyrgbnGR-gG_jv9kzaV1CQ";
 
 //Middlewares
 const app = new Hono();
