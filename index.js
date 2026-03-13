@@ -16,7 +16,7 @@ app.use("*", cors());
 app.use("*", prettyJSON());
 const db = createClient({
   url: "libsql://auraboxdb-fahim6855.aws-ap-south-1.turso.io",
-  authToken: dbtoken,
+  authToken: dbToken,
 });
 
 //loginUser
