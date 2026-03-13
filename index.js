@@ -11,7 +11,6 @@ import bcrypt from "bcrypt";
 import { jwt, sign } from "hono/jwt";
 
 let dbToken = process.env.TURSO_DB_TOKEN;
-//console.log("TURSO_DB_TOKEN:", dbToken);
 
 //Middlewares
 const app = new Hono();
