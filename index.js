@@ -9,6 +9,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { createClient } from "@libsql/client";
 import bcrypt from "bcrypt";
 import { jwt, sign } from "hono/jwt";
+import { z } from "zod";
 
 let dbToken = process.env.TURSO_DB_TOKEN;
 
@@ -19,6 +20,11 @@ app.use("*", prettyJSON());
 const db = createClient({
   url: "libsql://auraboxdb-fahim6855.aws-ap-south-1.turso.io",
   authToken: dbToken,
+});
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 //loginUser
@@ -70,21 +76,28 @@ app.get(
 
 //sign up
 app.post("/signup", async (c) => {
-  const { name, email, password } = await c.req.json();
+  const body = await c.req.json();
+  const result = signupSchema.safeParse(body);
+  if (!result.success) {
+    return c.json({ error: result.error.issues[0].message }, 400);
+  }
 
-  const hashedPassword = await bcrypt.hash(password, 10); //encey
+  // ✅ get data from result.data, not db.execute
+  const { name, email, password } = result.data;
 
-  const result = await db.execute({
+  // ✅ now password is defined
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const dbResult = await db.execute({
     sql: "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
     args: [name, email, hashedPassword],
   });
 
   return c.json(
-    { message: "User created", userId: result.lastInsertRowid },
+    { message: "User created", userId: dbResult.lastInsertRowid },
     201
   );
 });
-
 //insert Note to turso
 app.post("/add", async (c) => {
   try {
