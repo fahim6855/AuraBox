@@ -58,6 +58,7 @@ app.post("/login", async (c) => {
 
   return c.json({ token });
 });
+
 // get info with token
 app.get(
   "/me",
@@ -151,51 +152,6 @@ app.get("/", async (c) => {
     return c.text("Note not found.Please Enter correct id number");
   }
   return c.json(note);
-});
-
-const usersDb = {
-  fahim: { password: "123", name: "Fahim Ahmed" },
-  karim: { password: "456", name: "Karim Ullah" },
-};
-
-// Protect only the /admin route
-app.use(
-  "/admin/*",
-  basicAuth({
-    // <--- You were missing this part!
-    verifyUser: (username, password, c) => {
-      const user = usersDb[username];
-
-      if (user && user.password === password) {
-        c.set("authUser", user.name);
-        return true;
-      }
-
-      return false;
-    },
-  }) // <--- And this closing bracket/parenthesis
-);
-
-app.get("/admin/data", (c) => {
-  const user = c.get("authUser");
-  return c.json({
-    message: `Welcome, ${user || "Guest"}! This is your profile.`,
-  });
-});
-// 2. Routes
-
-app.get("/user", (c) => {
-  return c.json({
-    name: "Fahim",
-    country: "Bangladesh",
-  });
-});
-
-app.get("/about/:name", (c) => {
-  const name = c.req.param("name");
-  return c.json({
-    name: name.toUpperCase(),
-  });
 });
 
 // 3. Start Server
