@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config(); // loads .env
-import { Hono } from "hono"; // read my  this
+import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
@@ -8,13 +8,13 @@ import Database from "better-sqlite3";
 import { prettyJSON } from "hono/pretty-json";
 import { createClient } from "@libsql/client";
 import bcrypt from "bcrypt";
-import { jwt, sign } from "hono/jwt";
+import { jwt, sign, verify } from "hono/jwt";
 import { z } from "zod";
 
 let dbToken = process.env.TURSO_DB_TOKEN;
 
 //Middlewares
-const app = new Hono();
+const app = new Hono(); //just a change
 app.use("*", cors());
 app.use("*", prettyJSON());
 const db = createClient({
@@ -27,6 +27,27 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+const authMiddleware = async (c, next) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const payload = await verify(
+      token,
+      process.env.JWT_SECRET || "your-secret",
+      "HS256"
+    );
+    c.set("user", payload); // attach user info to context
+    await next();
+  } catch (err) {
+    console.error("JWT verify failed:", err.message); // add this
+    return c.json({ error: "Invalid or expired token" }, 401);
+  }
+};
 //loginUser
 
 app.post("/login", async (c) => {
@@ -99,18 +120,19 @@ app.post("/signup", async (c) => {
     201
   );
 });
+
 //insert Note to turso
-app.post("/add", async (c) => {
+app.post("/add", authMiddleware, async (c) => {
   try {
-    // 1. Get the JSON body
     const body = await c.req.json();
 
-    // 2. Extract with defaults to avoid "null" constraint errors
+    // Get user_id from the JWT payload — not from the request body
+    const user = c.get("user");
+    const user_id = user.sub; // this is what you set in login: sub: user.id
+
     const title = body.title || "Untitled";
     const content = body.content || "dummy content";
-    const user_id = Number(body.user_id) || 1;
 
-    // 3. Execute with explicit arguments array
     await db.execute({
       sql: "INSERT INTO notes (title, content, user_id) VALUES (?, ?, ?)",
       args: [title, content, user_id],
@@ -118,11 +140,11 @@ app.post("/add", async (c) => {
 
     return c.json({ success: true }, 201);
   } catch (err) {
-    // This will print the EXACT error to your terminal
     console.error("Insert failed:", err.message);
     return c.json({ error: err.message }, 500);
   }
 });
+
 //Update Note
 //delete Note by id
 app.get("/delete/:id", async (c) => {
@@ -155,12 +177,12 @@ app.get("/", async (c) => {
 });
 
 // 3. Start Server
-const port = 3000;
-console.log(` 🔥 Server is running on http://localhost:${port}`);
+const port = 3001;
+console.log(` 🔥 Server is running on http://localhost:${port} 🔥`);
 
 serve({
   fetch: app.fetch,
   port,
 });
 
-export default app;
+export default app; //port
