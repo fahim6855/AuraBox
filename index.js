@@ -147,18 +147,20 @@ app.post("/add", authMiddleware, async (c) => {
 
 //Update Note
 //delete Note by id
-app.get("/delete/:id", async (c) => {
+app.delete("/delete/:id", authMiddleware, async (c) => {
   const id = c.req.param("id");
+  const user = c.get("user");
+  const user_id = user.sub;
 
   try {
     const result = await db.execute({
-      sql: "DELETE FROM notes WHERE id = ?",
-      args: [id],
+      sql: "DELETE FROM notes WHERE id = ? AND user_id = ?",
+      args: [id, user_id],
     });
 
     // result.rowsAffected tells us if something was actually deleted
     if (result.rowsAffected === 0) {
-      return c.json({ error: "Note not found" }, 404);
+      return c.json({ error: "Note not found or not yours" }, 404);
     }
 
     return c.json({ success: true, message: `Note ${id} deleted` });
