@@ -77,6 +77,7 @@ app.post("/login", async (c) => {
     "HS256"
   );
 
+  // console.log(user, valid, token);
   return c.json({ token });
 });
 
@@ -146,6 +147,31 @@ app.post("/add", authMiddleware, async (c) => {
 });
 
 //Update Note
+app.post("/edit/:id", authMiddleware, async (c) => {
+  const id = c.req.param("id");
+  const user = c.get("user");
+  const user_id = user.sub;
+
+  const body = await c.req.json();
+  const { title, content } = body;
+
+  try {
+    const result = await db.execute({
+      sql: "UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?",
+      args: [title, content, id, user_id],
+    });
+
+    if (result.rowsAffected === 0) {
+      return c.json({ error: "Note not found or not yours" }, 404);
+    }
+
+    return c.json({ message: "Note updated successfully" }, 200);
+  } catch (e) {
+    console.error("Update Error:", e.message);
+    return c.json({ error: "Failed to update note: " + e.message }, 500);
+  }
+});
+
 //delete Note by id
 app.delete("/delete/:id", authMiddleware, async (c) => {
   const id = c.req.param("id");
